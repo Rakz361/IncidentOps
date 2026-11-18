@@ -1,4 +1,6 @@
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.routes.auth import router as auth_router
+from app.api.routes.rbac_test import router as rbac_test_router
 
 from fastapi import FastAPI
 from sqlalchemy import text
@@ -11,12 +13,15 @@ app= FastAPI(
     version="1.0.0"
 )
 
+app.include_router(auth_router)
+app.include_router(rbac_test_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
-    
+
     allow_headers=["*"],
 )
 
