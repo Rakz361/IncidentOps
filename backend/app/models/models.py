@@ -1,12 +1,5 @@
 
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Boolean,
-    DateTime,
-    func
-)
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, func
 
 from app.core.database import Base
 
@@ -39,3 +32,62 @@ class User(Base):
         DateTime(timezone=True),
         server_default=func.now()
     )
+
+
+class Service(Base):
+    __tablename__ = "services"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, nullable=False)
+    description = Column(String(500), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now()
+    )
+
+
+class Incident(Base):
+    __tablename__ = "incidents"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    title = Column(String(200), nullable=False)
+    description = Column(String(2000), nullable=True)
+
+    severity = Column(String(10), default="P3", nullable=False)
+    status = Column(String(30), default="open", nullable=False)
+
+    service_id = Column(
+        Integer,
+        ForeignKey("services.id"),
+        nullable=False,
+        index=True
+    )
+
+    assigned_to_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=True
+    )
+
+    created_by_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=False
+    )
+
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now()
+    )
+
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now()
+    )
+
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+
+

@@ -1,6 +1,9 @@
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes.auth import router as auth_router
 from app.api.routes.rbac_test import router as rbac_test_router
+from app.api.routes.admin import router as admin_router
+from app.api.routes.services import router as services_router
+from app.api.routes.incidents import router as incidents_router
 
 from fastapi import FastAPI
 from sqlalchemy import text
@@ -15,6 +18,9 @@ app= FastAPI(
 
 app.include_router(auth_router)
 app.include_router(rbac_test_router)
+app.include_router(admin_router)
+app.include_router(services_router)
+app.include_router(incidents_router)
 
 app.add_middleware(
     CORSMiddleware,
