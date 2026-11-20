@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 
@@ -12,6 +12,7 @@ from app.schemas.incident import (
     IncidentUpdate,
     IncidentResponse
 )
+from app.core.websocket_manager import manager
 
 router = APIRouter(
     prefix="/incidents",
@@ -26,6 +27,7 @@ router = APIRouter(
 )
 def create_incident(
     incident_data: IncidentCreate,
+     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(
         require_roles(
@@ -83,6 +85,21 @@ def create_incident(
     db.commit()
     db.refresh(new_incident)
 
+    background_tasks.add_task(
+    manager.broadcast,
+    {
+        "event": "incident_created",
+        "data": {
+            "id": new_incident.id,
+            "title": new_incident.title,
+            "severity": new_incident.severity,
+            "status": new_incident.status,
+            "service_id": new_incident.service_id,
+            "assigned_to_id": new_incident.assigned_to_id,
+            "created_by_id": new_incident.created_by_id
+        }
+    }
+    )
     return new_incident
 
 
@@ -122,6 +139,7 @@ def get_incident_by_id(
 def update_incident(
     incident_id: int,
     incident_data: IncidentUpdate,
+     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(
         require_roles(
@@ -212,6 +230,27 @@ def update_incident(
 
     db.commit()
     db.refresh(incident)
+
+
+    background_tasks.add_task(
+    manager.broadcast,
+    {
+        "event": "incident_updated",
+        "data": {
+            "id": incident.id,
+            "title": incident.title,
+            "severity": incident.severity,
+            "status": incident.status,
+            "service_id": incident.service_id,
+            "assigned_to_id": incident.assigned_to_id,
+            "updated_at": (
+                incident.updated_at.isoformat()
+                if incident.updated_at
+                else None
+            )
+        }
+    }
+    )
 
     return incident
 

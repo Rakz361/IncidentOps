@@ -5,6 +5,7 @@ from app.api.routes.admin import router as admin_router
 from app.api.routes.services import router as services_router
 from app.api.routes.incidents import router as incidents_router
 from app.api.routes.alerts import router as alerts_router
+from app.api.routes.websocket import router as websocket_router
 
 from fastapi import FastAPI
 from sqlalchemy import text
@@ -23,6 +24,8 @@ app.include_router(admin_router)
 app.include_router(services_router)
 app.include_router(incidents_router)
 app.include_router(alerts_router)
+app.include_router(websocket_router)
+
 
 app.add_middleware(
     CORSMiddleware,
