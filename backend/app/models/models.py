@@ -1,5 +1,14 @@
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, func
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    JSON,
+    func
+)
 
 from app.core.database import Base
 
@@ -91,3 +100,51 @@ class Incident(Base):
     resolved_at = Column(DateTime(timezone=True), nullable=True)
 
 
+class Alert(Base):
+    __tablename__ = "alerts"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Unique identifier used to detect duplicate alerts
+    dedup_key = Column(String(255), unique=True, nullable=False, index=True)
+
+    # Monitoring system that generated the alert
+    source = Column(String(100), nullable=False)
+
+    # Alert information
+    title = Column(String(200), nullable=False)
+    description = Column(String(2000), nullable=True)
+    severity = Column(String(10), nullable=False)
+
+    # Related service
+    service_id = Column(
+        Integer,
+        ForeignKey("services.id"),
+        nullable=False,
+        index=True
+    )
+
+    # Incident created from this alert
+    incident_id = Column(
+        Integer,
+        ForeignKey("incidents.id"),
+        nullable=True
+    )
+
+    # Original alert payload
+    payload = Column(JSON, nullable=True)
+
+    # Track repeated alerts
+    occurrence_count = Column(Integer, default=1, nullable=False)
+
+    first_received_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False
+    )
+
+    last_received_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False
+    )
