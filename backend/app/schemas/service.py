@@ -27,4 +27,6 @@ class ServiceUpdate(BaseModel):
         default=None,
         max_length=500
     )
+    
+    is_active: bool | None = None
 
