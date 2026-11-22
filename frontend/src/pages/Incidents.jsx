@@ -33,44 +33,90 @@
       const [formError, setFormError] = useState('')
 
       async function fetchIncidents() {
-        try {
-          setLoading(true)
-          setError('')
+  setLoading(true)
+  setError('')
 
-          const response = await API.get('/incidents/')
+  try {
+    const response = await API.get('/incidents/')
 
-          setIncidents(response.data)
+    setIncidents(response.data)
 
-        } catch (error) {
-          console.error('Failed to fetch incidents:', error)
+  } catch (error) {
+    console.error('Failed to fetch incidents:', error)
 
-          const message = error.response?.data?.detail
+    const message = error.response?.data?.detail
 
-          setError(
-            typeof message === 'string'
-              ? message
-              : 'Unable to load incidents. Please try again.'
-          )
+    setError(
+      typeof message === 'string'
+        ? message
+        : 'Unable to load incidents. Please try again.'
+    )
 
-        } finally {
-          setLoading(false)
-        }
+  } finally {
+    setLoading(false)
+  }
+}
+    // Load initial incident and service data
+useEffect(() => {
+  const controller = new AbortController()
+
+  async function loadInitialIncidents() {
+    try {
+      const response = await API.get('/incidents/', {
+        signal: controller.signal
+      })
+
+      if (!controller.signal.aborted) {
+        setIncidents(response.data)
       }
-    
-      async function fetchServices() {
-      try {
-        const response = await API.get('/services/')
+
+    } catch (error) {
+      if (controller.signal.aborted) return
+
+      console.error('Failed to fetch incidents:', error)
+
+      const message = error.response?.data?.detail
+
+      setError(
+        typeof message === 'string'
+          ? message
+          : 'Unable to load incidents. Please try again.'
+      )
+
+    } finally {
+      if (!controller.signal.aborted) {
+        setLoading(false)
+      }
+    }
+  }
+
+  async function loadInitialServices() {
+    try {
+      const response = await API.get('/services/', {
+        signal: controller.signal
+      })
+
+      if (!controller.signal.aborted) {
         setServices(response.data)
-      } catch (error) {
-        console.error('Failed to fetch services:', error)
-        setFormError('Unable to load services.')
-      }
       }
 
-      useEffect(() => {
-      fetchServices()
-      }, [])
+    } catch (error) {
+      if (controller.signal.aborted) return
 
+      console.error('Failed to fetch services:', error)
+
+      setFormError('Unable to load services.')
+    }
+  }
+
+  loadInitialIncidents()
+  loadInitialServices()
+
+  return () => {
+    controller.abort()
+  }
+}, [])
+      
       async function handleCreateIncident(event) {
       event.preventDefault()
 
@@ -112,9 +158,7 @@
       }
       }
 
-      useEffect(() => {
-        fetchIncidents()
-      }, [])
+   
     function handleEditIncident(incident) {
       setEditingIncident(incident)
 
@@ -439,18 +483,6 @@
     ×
   </button>
 </div>
-
-  <button
-    type="button"
-    onClick={() => {
-      setEditingIncident(null)
-      setFormError('')
-    }}
-    className="text-slate-400 hover:text-white text-2xl"
-    aria-label="Close"
-  >
-    ×
-  </button>
 </div>
 
               <form

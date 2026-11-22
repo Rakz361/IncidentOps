@@ -1,12 +1,16 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 
-from app.schemas.admin import UserRoleUpdate, UserStatusUpdate
+from app.schemas.admin import (
+    UserRoleUpdate,
+    UserStatusUpdate
+)
 from app.core.database import get_db
 from app.core.dependencies import require_roles
 from app.core.roles import UserRole
 from app.models.models import User
 from app.schemas.auth import UserResponse
+
 
 router = APIRouter(
     prefix="/admin",
@@ -125,4 +129,5 @@ def update_user_status(
     db.refresh(user)
 
     return user
+
 

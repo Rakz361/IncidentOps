@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react'
 import API from '../services/api'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from "../context/useAuth";
 
 function Services() {
     const { user } = useAuth()
@@ -53,9 +53,46 @@ const [updating, setUpdating] = useState(false)
       setLoading(false)
     }
   }
-  useEffect(() => {
-    fetchServices()
-  }, [])
+  // Load services when the page mounts
+useEffect(() => {
+  const controller = new AbortController()
+
+  async function loadInitialServices() {
+    try {
+      const response = await API.get('/services/', {
+        signal: controller.signal
+      })
+
+      if (!controller.signal.aborted) {
+        setServices(response.data)
+      }
+
+    } catch (error) {
+      if (controller.signal.aborted) return
+
+      console.error('Failed to fetch services:', error)
+
+      const message = error.response?.data?.detail
+
+      setError(
+        typeof message === 'string'
+          ? message
+          : 'Unable to load services. Please try again.'
+      )
+
+    } finally {
+      if (!controller.signal.aborted) {
+        setLoading(false)
+      }
+    }
+  }
+
+  loadInitialServices()
+
+  return () => {
+    controller.abort()
+  }
+}, [])
 
   async function handleCreateService(event) {
   event.preventDefault()
@@ -537,9 +574,7 @@ async function handleToggleServiceStatus(service) {
                         {service.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    {isAdmin && (
-  <td className="px-5 py-4">
-    {isAdmin && (
+   {isAdmin && (
   <td className="px-5 py-4">
     <div className="flex items-center gap-2">
 
@@ -565,8 +600,6 @@ async function handleToggleServiceStatus(service) {
       </button>
 
     </div>
-  </td>
-)}
   </td>
 )}
                   </tr>
