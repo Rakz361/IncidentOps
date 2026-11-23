@@ -40,7 +40,7 @@ function AuthenticatedApp() {
   function renderPage() {
     switch (activePage) {
       case 'Dashboard':
-        return <Dashboard />
+        return <Dashboard onNavigate={setActivePage} />
 
       case 'Incidents':
         return <Incidents />
