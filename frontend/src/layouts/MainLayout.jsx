@@ -1,41 +1,34 @@
+import { useState } from "react";
+import ConnectionStatus from "../components/ConnectionStatus";
 
-import { useState } from 'react'
-
-function MainLayout({
-  children,
-  activePage,
-  onNavigate,
-  user,
-  onLogout
-}) {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+function MainLayout({ children, activePage, onNavigate, user, onLogout }) {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const navigation = [
-    { name: 'Dashboard', icon: '▦' },
-    { name: 'Incidents', icon: '⚠' },
-    { name: 'Services', icon: '◈' },
-    { name: 'Users', icon: '♙' }
-  ]
+    { name: "Dashboard", icon: "▦" },
+    { name: "Incidents", icon: "⚠" },
+    { name: "Services", icon: "◈" },
+    { name: "Users", icon: "♙" },
+  ];
 
   // Convert database role into a readable label
   const roleLabels = {
-    admin: 'Administrator',
-    incident_commander: 'Incident Commander',
-    responder: 'Responder',
-    viewer: 'Viewer'
-  }
+    admin: "Administrator",
+    incident_commander: "Incident Commander",
+    responder: "Responder",
+    viewer: "Viewer",
+  };
 
-  const userName = user?.full_name || 'User'
-  const userRole = roleLabels[user?.role] || 'User'
-  const userInitial = userName.charAt(0).toUpperCase()
+  const userName = user?.full_name || "User";
+  const userRole = roleLabels[user?.role] || "User";
+  const userInitial = userName.charAt(0).toUpperCase();
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-
       {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-40 ${
-          sidebarOpen ? 'w-64' : 'w-20'
+          sidebarOpen ? "w-64" : "w-20"
         } bg-slate-900 border-r border-slate-800 transition-all duration-300`}
       >
         <div className="flex h-16 items-center px-5 border-b border-slate-800">
@@ -57,16 +50,14 @@ function MainLayout({
             <button
               key={item.name}
               onClick={() => onNavigate(item.name)}
-              title={!sidebarOpen ? item.name : ''}
+              title={!sidebarOpen ? item.name : ""}
               className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 mb-2 text-sm transition-colors ${
                 activePage === item.name
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  ? "bg-blue-600 text-white"
+                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
               }`}
             >
-              <span className="text-lg w-6 text-center">
-                {item.icon}
-              </span>
+              <span className="text-lg w-6 text-center">{item.icon}</span>
 
               {sidebarOpen && <span>{item.name}</span>}
             </button>
@@ -87,13 +78,11 @@ function MainLayout({
       {/* Main Content */}
       <div
         className={`${
-          sidebarOpen ? 'ml-64' : 'ml-20'
+          sidebarOpen ? "ml-64" : "ml-20"
         } transition-all duration-300`}
       >
-
         {/* Header */}
         <header className="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6">
-
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -109,6 +98,8 @@ function MainLayout({
 
           {/* User Profile */}
           <div className="flex items-center gap-4">
+            {/* WebSocket Connection Status */}
+            <ConnectionStatus />
 
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center font-semibold text-white">
@@ -116,13 +107,9 @@ function MainLayout({
               </div>
 
               <div className="hidden sm:block">
-                <p className="text-sm font-medium">
-                  {userName}
-                </p>
+                <p className="text-sm font-medium">{userName}</p>
 
-                <p className="text-xs text-slate-400">
-                  {userRole}
-                </p>
+                <p className="text-xs text-slate-400">{userRole}</p>
               </div>
             </div>
 
@@ -133,18 +120,14 @@ function MainLayout({
             >
               Logout
             </button>
-
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="p-6">
-          {children}
-        </main>
-
+        <main className="p-6">{children}</main>
       </div>
     </div>
-  )
+  );
 }
 
-export default MainLayout
+export default MainLayout;

@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
+import { useWebSocket } from "../context/useWebSocket";
 
 function Dashboard({ onNavigate }) {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshVersion, setRefreshVersion] = useState(0);
+ const { incidentRevision } = useWebSocket();
+
 
   useEffect(() => {
     const controller = new AbortController();
@@ -43,7 +46,7 @@ function Dashboard({ onNavigate }) {
     return () => {
       controller.abort();
     };
-  }, [refreshVersion]);
+  }, [refreshVersion, incidentRevision]);
 
   function refreshDashboard() {
     setLoading(true);

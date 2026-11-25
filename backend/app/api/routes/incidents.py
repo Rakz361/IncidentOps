@@ -255,9 +255,11 @@ def update_incident(
     return incident
 
 
+
 @router.delete("/{incident_id}")
 def delete_incident(
     incident_id: int,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(
         require_roles(UserRole.ADMIN)
@@ -277,6 +279,17 @@ def delete_incident(
     # Delete the incident
     db.delete(incident)
     db.commit()
+
+    # Notify all connected users
+    background_tasks.add_task(
+        manager.broadcast,
+        {
+            "event": "incident_deleted",
+            "data": {
+                "id": incident_id
+            }
+        }
+    )
 
     return {
         "message": "Incident deleted successfully"

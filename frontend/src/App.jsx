@@ -10,6 +10,7 @@ import Incidents from './pages/Incidents'
 import Services from './pages/Services'
 import Users from './pages/Users'
 import AcceptInvitation from './pages/AcceptInvitation'
+import { WebSocketProvider } from './context/WebSocketProvider'
 
 function AuthenticatedApp() {
   const {
@@ -77,10 +78,12 @@ function App() {
 
   // Existing authenticated application
   return (
-    <AuthProvider>
+  <AuthProvider>
+    <WebSocketProvider>
       <AuthenticatedApp />
-    </AuthProvider>
-  )
+    </WebSocketProvider>
+  </AuthProvider>
+)
 }
 
 export default App

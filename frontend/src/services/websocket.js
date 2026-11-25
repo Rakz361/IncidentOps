@@ -1,52 +1,27 @@
+import API from './api'
 
-const WS_BASE_URL = 'ws://localhost:8000/ws/incidents'
+export function createWebSocket() {
+  const apiBaseURL = API.defaults.baseURL
 
-export function connectIncidentWebSocket(
-  token,
-  onMessage,
-  onStatusChange
-) {
-  if (!token) {
-    throw new Error('Authentication token is required')
-  }
-
-  // Establish a WebSocket connection
-  const socket = new WebSocket(
-    `${WS_BASE_URL}?token=${encodeURIComponent(token)}`
+  const websocketURL = new URL(
+    '/ws/incidents',
+    apiBaseURL
   )
 
-  // Connection established
-  socket.onopen = () => {
-    console.log('Incident WebSocket connected')
-    onStatusChange?.('connected')
+  websocketURL.protocol =
+    websocketURL.protocol === 'https:'
+      ? 'wss:'
+      : 'ws:'
+
+  if (
+    import.meta.env.PROD &&
+    window.location.protocol === 'https:' &&
+    websocketURL.protocol !== 'wss:'
+  ) {
+    throw new Error(
+      'Secure WebSocket connection is required'
+    )
   }
 
-  // Receive messages from FastAPI
-  socket.onmessage = (event) => {
-    try {
-      const message = JSON.parse(event.data)
-
-      console.log('WebSocket event received:', message)
-
-      onMessage?.(message)
-
-    } catch (error) {
-      console.error('Invalid WebSocket message:', error)
-    }
-  }
-
-  // Connection error
-  socket.onerror = (error) => {
-    console.error('WebSocket error:', error)
-    onStatusChange?.('error')
-  }
-
-  // Connection closed
-  socket.onclose = (event) => {
-    console.log('WebSocket disconnected:', event.code)
-    onStatusChange?.('disconnected')
-  }
-
-  // Return socket so React can close it later
-  return socket
+  return new WebSocket(websocketURL.toString())
 }
