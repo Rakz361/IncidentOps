@@ -1,17 +1,24 @@
-
-# Python
-__pycache__/
-*.py[cod]
-venv/
+# Environment variables
 .env
 .env.*
-
-# Keep an example environment template
 !.env.example
 
-# Node
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node.js
 node_modules/
 dist/
+
+# Deployment
+.vercel/
+
+# Logs
+*.log
 
 # IDE
 .vscode/

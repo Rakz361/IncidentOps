@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/accept-invitation",
+      "destination": "/index.html"
+    }
+  ]
+}

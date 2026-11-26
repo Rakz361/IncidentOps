@@ -12,15 +12,13 @@ const HEARTBEAT_TIMEOUT = 10000;
 const AUTH_TIMEOUT = 10000;
 
 export function WebSocketProvider({ children }) {
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
 
-  const [connectionStatus, setConnectionStatus] =
-    useState("disconnected");
+  const [connectionStatus, setConnectionStatus] = useState("disconnected");
 
   const [lastMessage, setLastMessage] = useState(null);
 
-  const [incidentRevision, setIncidentRevision] =
-    useState(0);
+  const [incidentRevision, setIncidentRevision] = useState(0);
 
   useEffect(() => {
     if (!token) return;
@@ -61,10 +59,7 @@ export function WebSocketProvider({ children }) {
 
       const delay = retryDelay;
 
-      retryDelay = Math.min(
-        retryDelay * 2,
-        MAX_RETRY_DELAY
-      );
+      retryDelay = Math.min(retryDelay * 2, MAX_RETRY_DELAY);
 
       reconnectTimer = setTimeout(() => {
         reconnectTimer = null;
@@ -89,16 +84,10 @@ export function WebSocketProvider({ children }) {
         socket.send("ping");
 
         pongTimer = setTimeout(() => {
-          console.warn(
-            "WebSocket heartbeat timed out"
-          );
+          console.warn("WebSocket heartbeat timed out");
 
-          socket?.close(
-            4000,
-            "Heartbeat timeout"
-          );
+          socket?.close(4000, "Heartbeat timeout");
         }, HEARTBEAT_TIMEOUT);
-
       } catch {
         socket?.close();
       }
@@ -112,12 +101,8 @@ export function WebSocketProvider({ children }) {
 
       try {
         socket = createWebSocket();
-
       } catch (error) {
-        console.error(
-          "WebSocket creation failed:",
-          error
-        );
+        console.error("WebSocket creation failed:", error);
 
         scheduleReconnect();
         return;
@@ -127,10 +112,7 @@ export function WebSocketProvider({ children }) {
 
       // Transport connected: authenticate first
       currentSocket.onopen = () => {
-        if (
-          disposed ||
-          socket !== currentSocket
-        ) {
+        if (disposed || socket !== currentSocket) {
           return;
         }
 
@@ -140,23 +122,17 @@ export function WebSocketProvider({ children }) {
           currentSocket.send(
             JSON.stringify({
               type: "authenticate",
-              token: token
-            })
+              token: token,
+            }),
           );
 
           authTimer = setTimeout(() => {
             if (!authenticated) {
-              console.warn(
-                "WebSocket authentication timed out"
-              );
+              console.warn("WebSocket authentication timed out");
 
-              currentSocket.close(
-                4001,
-                "Authentication timeout"
-              );
+              currentSocket.close(4001, "Authentication timeout");
             }
           }, AUTH_TIMEOUT);
-
         } catch {
           currentSocket.close();
         }
@@ -164,10 +140,7 @@ export function WebSocketProvider({ children }) {
 
       // Handle incoming messages
       currentSocket.onmessage = (event) => {
-        if (
-          disposed ||
-          socket !== currentSocket
-        ) {
+        if (disposed || socket !== currentSocket) {
           return;
         }
 
@@ -187,20 +160,13 @@ export function WebSocketProvider({ children }) {
             setConnectionStatus("connected");
 
             // Recover missed incident data
-            setIncidentRevision(
-              (previous) => previous + 1
-            );
+            setIncidentRevision((previous) => previous + 1);
 
-            console.log(
-              "IncidentOps WebSocket authenticated"
-            );
+            console.log("IncidentOps WebSocket authenticated");
 
             sendHeartbeat();
 
-            heartbeatTimer = setInterval(
-              sendHeartbeat,
-              HEARTBEAT_INTERVAL
-            );
+            heartbeatTimer = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
 
             return;
           }
@@ -226,64 +192,57 @@ export function WebSocketProvider({ children }) {
             [
               "incident_created",
               "incident_updated",
-              "incident_deleted"
+              "incident_deleted",
             ].includes(message.event)
           ) {
-            setIncidentRevision(
-              (previous) => previous + 1
-            );
+            setIncidentRevision((previous) => previous + 1);
           }
 
-          console.log(
-            "WebSocket event:",
-            message.event
-          );
-
+          console.log("WebSocket event:", message.event);
         } catch {
-          console.error(
-            "Invalid WebSocket message"
-          );
+          console.error("Invalid WebSocket message");
         }
       };
 
       // Handle connection errors
       currentSocket.onerror = () => {
-        if (
-          disposed ||
-          socket !== currentSocket
-        ) {
+        if (disposed || socket !== currentSocket) {
           return;
         }
 
-        console.warn(
-          "WebSocket connection error"
-        );
+        console.warn("WebSocket connection error");
       };
 
       // Handle connection closure
       currentSocket.onclose = (event) => {
-        if (
-          disposed ||
-          socket !== currentSocket
-        ) {
-          return;
-        }
+        if (disposed || socket !== currentSocket) return;
 
         authenticated = false;
 
         clearAuthTimer();
         clearHeartbeat();
 
-        console.log(
-          "WebSocket disconnected:",
-          event.code
-        );
+        console.log("WebSocket disconnected:", event.code);
 
-        // Stop retrying invalid or expired sessions
+        const invalidSessionReasons = [
+          "Invalid or expired session",
+          "Session expired or inactive",
+        ];
+
         if (
-          event.code === 1008 ||
-          event.code === 1009
+          event.code === 1008 &&
+          invalidSessionReasons.includes(event.reason)
         ) {
+          setConnectionStatus("disconnected");
+
+          if (sessionStorage.getItem("access_token") === token) {
+            logout();
+          }
+
+          return;
+        }
+
+        if (event.code === 1008 || event.code === 1009) {
           setConnectionStatus("disconnected");
           return;
         }
@@ -313,21 +272,16 @@ export function WebSocketProvider({ children }) {
         socket.close();
       }
     };
-
-  }, [token]);
+  }, [token, logout]);
 
   return (
     <WebSocketContext.Provider
       value={{
-        connectionStatus: token
-          ? connectionStatus
-          : "disconnected",
+        connectionStatus: token ? connectionStatus : "disconnected",
 
-        lastMessage: token
-          ? lastMessage
-          : null,
+        lastMessage: token ? lastMessage : null,
 
-        incidentRevision
+        incidentRevision,
       }}
     >
       {children}
